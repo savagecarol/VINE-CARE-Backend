@@ -1,5 +1,7 @@
 import re
 import logging
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import (
     ChannelType, TriggerEvent,
     NotificationTemplate, Notification,
@@ -38,12 +40,19 @@ class NotificationService:
             message=message,
         )
         try:
-            # Replace with real email logic e.g. Django send_mail()
-            logger.info(f"[EMAIL] Sending to user {user_id}: {message}")
+            send_mail(
+                subject=template.title,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[payload.get('email')],  # pass email in payload
+                fail_silently=False,
+            )
             notif.status = "SUCCESS"
+            logger.info(f"[EMAIL] Sent to {payload.get('email')}")
         except Exception as e:
             notif.status = "FAILED"
             notif.status_reason = str(e)
+            logger.error(f"[EMAIL] Failed for user {user_id}: {e}")
         notif.save()
 
     @staticmethod
@@ -56,7 +65,7 @@ class NotificationService:
             message=message,
         )
         try:
-            # Replace with real SMS logic e.g. Twilio
+            # Replace with Twilio or any SMS provider
             logger.info(f"[SMS] Sending to user {user_id}: {message}")
             notif.status = "SUCCESS"
         except Exception as e:
@@ -65,7 +74,7 @@ class NotificationService:
         notif.save()
 
     @classmethod
-    def notify(cls, user_id: int, event: str, payload: dict):
+    def notify(cls, user_id, event: str, payload: dict):
         templates = NotificationTemplate.objects.filter(
             trigger_event=event,
             is_active=True
