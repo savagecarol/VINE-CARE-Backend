@@ -118,3 +118,9 @@ def upload_images(request):
 
     except Exception as e:
         return failure_response(str(e), 500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check(request):
+    return Response({'status': 'ok'})
