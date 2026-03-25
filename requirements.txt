@@ -4,7 +4,9 @@ botocore==1.42.75
 Django==5.2.12
 django-storages==1.14.6
 djangorestframework==3.16.1
+gunicorn==25.2.0
 jmespath==1.1.0
+packaging==26.0
 psycopg2-binary==2.9.11
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
