@@ -121,6 +121,60 @@ def upload_images(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_data(request):
+    block  = request.query_params.get('block')
+    meters = request.query_params.get('meters')
+    page   = request.query_params.get('page', 1)
+    limit  = request.query_params.get('limit', 10)
+
+    try:
+        page  = int(page)
+        limit = int(limit)
+        if page < 1 or limit < 1:
+            return failure_response("page and limit must be positive integers", 400)
+    except ValueError:
+        return failure_response("page and limit must be numbers", 400)
+
+    if not block and not meters:
+        return failure_response("At least one filter (block or meters) is required", 400)
+
+    queryset = DataCollection.objects.all().order_by('-created_at')
+
+    if block:
+        queryset = queryset.filter(block=block)
+
+    if meters:
+        try:
+            queryset = queryset.filter(meters=int(meters))
+        except ValueError:
+            return failure_response("meters must be a number", 400)
+
+    total   = queryset.count()
+    offset  = (page - 1) * limit
+    records = queryset[offset:offset + limit]
+
+    data = [
+        {
+            "id":            r.id,
+            "block":         r.block,
+            "meters":        r.meters,
+            "image_url":     r.image_url,
+            "original_name": r.original_name,
+            "created_at":    r.created_at.isoformat(),
+        }
+        for r in records
+    ]
+
+    return success_response({
+        "page":        page,
+        "limit":       limit,
+        "total":       total,
+        "total_pages": (total + limit - 1) // limit,
+        "results":     data,
+    })
+
+@api_view(['GET'])
 @permission_classes([AllowAny])
 def health_check(request):
     return Response({'status': 'ok'})
