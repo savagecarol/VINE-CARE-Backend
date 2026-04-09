@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: notification/Dockerfile
+    restart: always
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn notification.wsgi:application --bind 0.0.0.0:8001 --workers 3"
