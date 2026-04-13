@@ -125,6 +125,7 @@ class Flight(models.Model):
         related_name='flights'
     )
     flight_date = models.DateField(help_text='Date of the flight')
+    altitude_meters = models.IntegerField(null=True, blank=True, help_text='Drone flight altitude in meters (e.g. 100, 120, 140)')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(

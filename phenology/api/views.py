@@ -15,6 +15,7 @@ from .models import (
     Farm, Location, Block, Flight, Image, KPI, Action,
     Prediction, PhenologyStage, ActionType, ChemicalType
 )
+from . import notifier
 
 logger = logging.getLogger(__name__)
 
@@ -420,6 +421,7 @@ def create_flight(request):
     """
     block_id = request.data.get('block_id')
     flight_date = request.data.get('flight_date')
+    altitude_meters = request.data.get('altitude_meters')
 
     if not block_id:
         return failure_response('block_id is required')
@@ -438,14 +440,19 @@ def create_flight(request):
     flight = Flight.objects.create(
         block=block,
         flight_date=flight_date,
+        altitude_meters=int(altitude_meters) if altitude_meters else None,
         created_by=request.user,
         updated_by=request.user
     )
 
+    notifier.notify_flight_added(request.user, block, flight)
+
     return success_response({
         'id': str(flight.id),
         'block_id': str(block.id),
+        'block_name': block.name,
         'flight_date': flight.flight_date.isoformat(),
+        'altitude_meters': flight.altitude_meters,
         'created_at': flight.created_at.isoformat()
     }, status.HTTP_201_CREATED)
 
@@ -483,6 +490,7 @@ def list_flights(request):
             'block_name': f.block.name,
             'farm_name': f.block.farm.name,
             'flight_date': f.flight_date.isoformat(),
+            'altitude_meters': f.altitude_meters,
             'images_count': f.images.count(),
             'created_at': f.created_at.isoformat()
         }
@@ -661,6 +669,8 @@ def create_kpi(request):
         updated_by=request.user
     )
 
+    notifier.notify_kpi_added(request.user, block, kpi)
+
     return success_response({
         'id': str(kpi.id),
         'block_id': str(block.id),
@@ -780,6 +790,8 @@ def create_action(request):
         updated_by=request.user
     )
 
+    notifier.notify_action_performed(request.user, block, action)
+
     return success_response({
         'id': str(action.id),
         'block_id': str(block.id),
@@ -811,11 +823,13 @@ def list_actions(request):
             'id': str(a.id),
             'block_id': str(a.block.id),
             'block_name': a.block.name,
+            'farm_name': a.block.farm.name,
             'period': a.period,
             'action_type': a.action_type,
             'chemical_type': a.chemical_type,
             'quantity': float(a.quantity) if a.quantity else None,
             'cost': float(a.cost) if a.cost else None,
+            'notes': a.notes or '',
             'created_at': a.created_at.isoformat()
         }
         for a in queryset
@@ -873,6 +887,8 @@ def create_phenology_stage(request):
         end_date=end_date,
         notes=request.data.get('notes', '')
     )
+
+    notifier.notify_phenology_stage_added(request.user, block, stage)
 
     return success_response({
         'id': str(stage.id),

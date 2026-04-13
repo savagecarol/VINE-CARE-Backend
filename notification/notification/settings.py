@@ -137,13 +137,11 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# AWS Configuration for SES (Email) and SNS (SMS/Push)
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
-
-# AWS SES Configuration (for Email)
-AWS_SES_SENDER_EMAIL = os.getenv('AWS_SES_SENDER_EMAIL')
-
-# AWS SNS Configuration (for SMS/Push)
-AWS_SNS_PLATFORM_APPLICATION_ARN = os.getenv('AWS_SNS_PLATFORM_APPLICATION_ARN')
+# SMTP Email Configuration
+EMAIL_BACKEND      = 'api.email_backend.EmailBackend'
+EMAIL_HOST         = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT         = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS      = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER    = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
